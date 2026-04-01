@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>입/퇴사 요청 메일 작성</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d1d5db;
+      --accent: #2563eb;
+      --accent-dark: #1d4ed8;
+      --danger: #dc2626;
+      --ok: #047857;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    .hero {
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 1.5rem;
+      line-height: 1.3;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .req { color: var(--danger); }
+
+    input, select, textarea, button {
+      font: inherit;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.18);
+      border-color: var(--accent);
+    }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .schedule-row {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fafafa;
+    }
+
+    .schedule-row h4 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+    }
+
+    .inline-summary {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .summary-box {
+      display: grid;
+      gap: 10px;
+      font-size: 0.94rem;
+    }
+
+    .summary-item {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+    }
+
+    .summary-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-dark); }
+
+    .btn-secondary {
+      background: #eef2ff;
+      color: #1e3a8a;
+    }
+
+    .message {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+
+    .message.error {
+      display: block;
+      background: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .message.success {
+      display: block;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .hide { display: none; }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      body { padding: 12px; }
+      .card { padding: 16px; }
+      .hero h1 { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>입/퇴사 요청 메일 작성</h1>
+      <p>필수값 입력 후 전송 버튼을 누르면 Outlook 메일 화면이 열립니다.</p>
+    </div>
+
+    <form id="requestForm">
+      <div class="card">
+        <h2 class="section-title">1. 요청 유형</h2>
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="requestType">요청 유형 <span class="req">*</span></label>
+            <select id="requestType" required>
+              <option value="">선택</option>
+              <option value="join">입사</option>
+              <option value="leave">퇴사</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="employeeType">사원구분 <span class="req">*</span></label>
+            <select id="employeeType" required>
+              <option value="">선택</option>
+              <option value="정규직">정규직</option>
+              <option value="단시간PT">단시간PT</option>
+              <option value="초단시간PT">초단시간PT</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">2. 기본 정보</h2>
+        <div class="grid grid-2">
+          <div class="field">
+            <label for="lastName">성 <span class="req">*</span></label>
+            <input id="lastName" type="text" maxlength="10" placeholder="예: 김" required />
+          </div>
+          <div class="field">
+            <label for="firstName">이름 <span class="req">*</span></label>
+            <input id="firstName" type="text" maxlength="20" placeholder="예: 제인" required />
+          </div>
+          <div class="field">
+            <label for="nationality">내/외국인 <span class="req">*</span></label>
+            <select id="nationality" required>
+              <option value="">선택</option>
+              <option value="내국인">내국인</option>
+              <option value="외국인">외국인</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="rrn">주민등록번호 <span class="req">*</span></label>
+            <input id="rrn" type="text" inputmode="numeric" maxlength="14" placeholder="000000-0000000" required />
+          </div>
+          <div class="field">
+            <label for="joinDate">입사일 <span class="req">*</span></label>
+            <input id="joinDate" type="date" required />
+          </div>
+          <div class="field leave-only hide">
+            <label for="leaveDate">퇴사일 <span class="req">*</span></label>
+            <input id="leaveDate" type="date" />
+          </div>
+          <div class="field leave-only hide" style="grid-column: 1 / -1;">
+            <label for="leaveReason">퇴사사유 <span class="req">*</span></label>
+            <textarea id="leaveReason" placeholder="예: 개인사정"></textarea>
+          </div>
+          <div class="field">
+            <label for="storeName">매장명 <span class="req">*</span></label>
+            <input id="storeName" type="text" maxlength="50" placeholder="예: 예술의전당점" required />
+          </div>
+          <div class="field">
+            <label for="phone">휴대전화번호 <span class="req">*</span></label>
+            <input id="phone" type="tel" inputmode="numeric" maxlength="13" placeholder="010-0000-0000" required />
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="email">이메일 <span class="req">*</span></label>
+            <input id="email" type="email" placeholder="example@email.com" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="card join-only hide">
+        <h2 class="section-title">3. 근무 스케줄</h2>
+        <p class="hint">최대 5행까지 입력할 수 있습니다. 시간은 30분 단위로 선택해 주세요.</p>
+        <div id="scheduleRows"></div>
+
+        <div class="summary-box">
+          <div class="summary-item">
+            <strong>주 단위 근로시간</strong>
+            <span id="weeklyHoursText">0시간 0분</span>
+          </div>
+          <div class="summary-item">
+            <strong>근무형태 참고</strong>
+            <span id="workTypeHint">사원구분을 선택해 주세요.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">4. 메일 미리보기</h2>
+        <div class="summary-box">
+          <div class="summary-item">
+            <strong>메일 제목</strong>
+            <span id="mailSubjectPreview">아직 생성되지 않았습니다.</span>
+          </div>
+          <div class="summary-item">
+            <strong>전송 대상</strong>
+            <span>GCK_People_Culture_Team@gongchakorea.co.kr</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn-secondary" id="previewBtn">미리보기 새로고침</button>
+          <button type="submit" class="btn-primary">Outlook 메일 열기</button>
+        </div>
+
+        <div id="formMessage" class="message"></div>
+        <div class="footer-note">전송 버튼을 누르면 기기 기본 메일 앱 또는 Outlook 작성 화면이 열릴 수 있습니다.</div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const teamMail = 'GCK_People_Culture_Team@gongchakorea.co.kr';
+    const form = document.getElementById('requestForm');
+    const requestType = document.getElementById('requestType');
+    const employeeType = document.getElementById('employeeType');
+    const previewBtn = document.getElementById('previewBtn');
+    const formMessage = document.getElementById('formMessage');
+    const mailSubjectPreview = document.getElementById('mailSubjectPreview');
+    const weeklyHoursText = document.getElementById('weeklyHoursText');
+    const workTypeHint = document.getElementById('workTypeHint');
+    const scheduleRows = document.getElementById('scheduleRows');
+
+    const joinOnlyEls = document.querySelectorAll('.join-only');
+    const leaveOnlyEls = document.querySelectorAll('.leave-only');
+    const leaveDate = document.getElementById('leaveDate');
+    const leaveReason = document.getElementById('leaveReason');
+
+    const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+
+    function createTimeOptions() {
+      const options = ['<option value="">선택</option>'];
+      for (let hour = 0; hour < 24; hour++) {
+        for (let min = 0; min < 60; min += 30) {
+          const hh = String(hour).padStart(2, '0');
+          const mm = String(min).padStart(2, '0');
+          const value = `${hh}:${mm}`;
+          options.push(`<option value="${value}">${value}</option>`);
+        }
+      }
+      return options.join('');
+    }
+
+    const timeOptions = createTimeOptions();
+
+    function buildScheduleRows() {
+      const rows = [];
+      for (let i = 0; i < 5; i++) {
+        rows.push(`
+          <div class="schedule-row" data-index="${i}">
+            <h4>${i + 1}행</h4>
+            <div class="grid grid-2">
+              <div class="field">
+                <label for="day_${i}">요일</label>
+                <select id="day_${i}">
+                  <option value="">선택</option>
+                  ${days.map(day => `<option value="${day}">${day}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label for="workStart_${i}">시업시간</label>
+                <select id="workStart_${i}">${timeOptions}</select>
+              </div>
+              <div class="field">
+                <label for="workEnd_${i}">종업시간</label>
+                <select id="workEnd_${i}">${timeOptions}</select>
+              </div>
+              <div class="field">
+                <label for="breakStart_${i}">휴게 시작</label>
+                <select id="breakStart_${i}">${timeOptions}</select>
+              </div>
+              <div class="field">
+                <label for="breakEnd_${i}">휴게 종료</label>
+                <select id="breakEnd_${i}">${timeOptions}</select>
+              </div>
+              <div class="field">
+                <label>총 근무시간</label>
+                <input id="totalHours_${i}" type="text" value="-" readonly />
+              </div>
+            </div>
+            <div class="inline-summary">
+              <span>입력하지 않은 행은 메일에서 제외됩니다.</span>
+            </div>
+          </div>
+        `);
+      }
+      scheduleRows.innerHTML = rows.join('');
+    }
+
+    function timeToMinutes(time) {
+      if (!time) return null;
+      const [h, m] = time.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function minutesToText(mins) {
+      if (mins == null || mins < 0) return '-';
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `${h}시간 ${m}분`;
+    }
+
+    function calculateRowHours(index) {
+      const workStart = document.getElementById(`workStart_${index}`).value;
+      const workEnd = document.getElementById(`workEnd_${index}`).value;
+      const breakStart = document.getElementById(`breakStart_${index}`).value;
+      const breakEnd = document.getElementById(`breakEnd_${index}`).value;
+      const totalField = document.getElementById(`totalHours_${index}`);
+
+      if (!workStart || !workEnd) {
+        totalField.value = '-';
+        return 0;
+      }
+
+      const workStartMin = timeToMinutes(workStart);
+      const workEndMin = timeToMinutes(workEnd);
+      if (workEndMin <= workStartMin) {
+        totalField.value = '시간 오류';
+        return 0;
+      }
+
+      let breakMins = 0;
+      if (breakStart && breakEnd) {
+        const breakStartMin = timeToMinutes(breakStart);
+        const breakEndMin = timeToMinutes(breakEnd);
+        if (breakEndMin > breakStartMin) {
+          breakMins = breakEndMin - breakStartMin;
+        }
+      }
+
+      const totalMins = (workEndMin - workStartMin) - breakMins;
+      totalField.value = totalMins > 0 ? minutesToText(totalMins) : '시간 오류';
+      return totalMins > 0 ? totalMins : 0;
+    }
+
+    function calculateWeeklyHours() {
+      let total = 0;
+      for (let i = 0; i < 5; i++) {
+        total += calculateRowHours(i);
+      }
+      weeklyHoursText.textContent = minutesToText(total);
+      return total;
+    }
+
+    function updateWorkTypeHint() {
+      const type = employeeType.value;
+      if (!type) {
+        workTypeHint.textContent = '사원구분을 선택해 주세요.';
+        return;
+      }
+      if (type === '정규직') {
+        workTypeHint.textContent = '정규직 선택 시 메일 제목과 본문에 정규직으로 표기됩니다.';
+      } else if (type === '단시간PT') {
+        workTypeHint.textContent = '단시간PT 선택 시 본문에 파트타이머(단시간) 기준으로 반영됩니다.';
+      } else {
+        workTypeHint.textContent = '초단시간PT 선택 시 본문에 파트타이머(초단시간) 기준으로 반영됩니다.';
+      }
+    }
+
+    function getMappedValues(type, storeName) {
+      if (type === '정규직') {
+        return {
+          employeeCategoryExcel: '정규직',
+          department: storeName,
+          jobType: '매장정규',
+          shift: '매장.',
+          attendanceGroup: '매장정규',
+          payType: '월급직(매장)'
+        };
+      }
+      if (type === '단시간PT') {
+        return {
+          employeeCategoryExcel: '파트타이머(단시간)',
+          department: storeName,
+          jobType: '파트타이머(단시간)',
+          shift: '매장-P.',
+          attendanceGroup: '매장PT',
+          payType: '시급직(매장)'
+        };
+      }
+      return {
+        employeeCategoryExcel: '파트타이머(초단시간)',
+        department: storeName,
+        jobType: '파트타이머(초단시간)',
+        shift: '매장-P.',
+        attendanceGroup: '매장PT',
+        payType: '시급직(매장)'
+      };
+    }
+
+    function toggleSections() {
+      const isJoin = requestType.value === 'join';
+      const isLeave = requestType.value === 'leave';
+
+      joinOnlyEls.forEach(el => el.classList.toggle('hide', !isJoin));
+      leaveOnlyEls.forEach(el => el.classList.toggle('hide', !isLeave));
+
+      leaveDate.required = isLeave;
+      leaveReason.required = isLeave;
+
+      if (!isLeave) {
+        leaveDate.value = '';
+        leaveReason.value = '';
+      }
+
+      calculateWeeklyHours();
+      updatePreview();
+    }
+
+    function formatRRN(value) {
+      const digits = value.replace(/\D/g, '').slice(0, 13);
+      if (digits.length <= 6) return digits;
+      return `${digits.slice(0, 6)}-${digits.slice(6)}`;
+    }
+
+    function formatPhone(value) {
+      const digits = value.replace(/\D/g, '').slice(0, 11);
+      if (digits.length < 4) return digits;
+      if (digits.length < 8) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+      return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
+    }
+
+    function buildSubject() {
+      const type = requestType.value;
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const employee = employeeType.value;
+      if (!type || !firstName || !lastName || !employee) {
+        return '아직 생성되지 않았습니다.';
+      }
+      const fullName = `${lastName}${firstName}`;
+      return type === 'join'
+        ? `[근로계약서 발송요청] ${fullName} - ${employee}`
+        : `[퇴직원 발송] ${fullName} - ${employee}`;
+    }
+
+    function buildScheduleLines() {
+      const lines = [];
+      for (let i = 0; i < 5; i++) {
+        const day = document.getElementById(`day_${i}`).value;
+        const workStart = document.getElementById(`workStart_${i}`).value;
+        const workEnd = document.getElementById(`workEnd_${i}`).value;
+        const breakStart = document.getElementById(`breakStart_${i}`).value;
+        const breakEnd = document.getElementById(`breakEnd_${i}`).value;
+        const total = document.getElementById(`totalHours_${i}`).value;
+
+        if (!day && !workStart && !workEnd && !breakStart && !breakEnd) continue;
+
+        lines.push(
+          `${lines.length + 1}) ${day || '-'} / ${workStart || '-'} ~ ${workEnd || '-'} / 휴게 ${breakStart || '-'} ~ ${breakEnd || '-'} / 총 ${total}`
+        );
+      }
+      return lines;
+    }
+
+    function buildBody() {
+      const type = requestType.value;
+      const lastName = document.getElementById('lastName').value.trim();
+      const firstName = document.getElementById('firstName').value.trim();
+      const nationality = document.getElementById('nationality').value;
+      const rrn = document.getElementById('rrn').value.trim();
+      const joinDate = document.getElementById('joinDate').value;
+      const leaveDateVal = document.getElementById('leaveDate').value;
+      const leaveReasonVal = document.getElementById('leaveReason').value.trim();
+      const employee = document.getElementById('employeeType').value;
+      const storeName = document.getElementById('storeName').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const weeklyMinutes = calculateWeeklyHours();
+      const mapped = getMappedValues(employee, storeName);
+
+      let body = '';
+      body += '[기본정보]\n';
+      body += `성: ${lastName}\n`;
+      body += `이름: ${firstName}\n`;
+      body += `내/외국인: ${nationality}\n`;
+      body += `주민등록번호: ${rrn}\n`;
+      body += `입사일: ${joinDate}\n`;
+
+      if (type === 'leave') {
+        body += `퇴사일: ${leaveDateVal}\n`;
+        body += `퇴사사유: ${leaveReasonVal}\n`;
+      }
+
+      body += `사원구분: ${employee}\n`;
+      body += `매장명: ${storeName}\n`;
+      body += `휴대전화: ${phone}\n`;
+      body += `이메일: ${email}\n\n`;
+
+      body += '[엑셀 반영값]\n';
+      body += `성: ${lastName}\n`;
+      body += `이름: ${firstName}\n`;
+      body += `내/외국인구분: ${nationality}\n`;
+      body += `주민등록번호: ${rrn}\n`;
+      body += `입사일: ${joinDate}\n`;
+      body += `퇴사일: ${type === 'leave' ? leaveDateVal : ''}\n`;
+      body += `퇴사사유: ${type === 'leave' ? leaveReasonVal : ''}\n`;
+      body += `사원구분: ${mapped.employeeCategoryExcel}\n`;
+      body += `부서: ${mapped.department}\n`;
+      body += `직종: ${mapped.jobType}\n`;
+      body += `휴대전화: ${phone}\n`;
+      body += `이메일: ${email}\n`;
+      body += `근무조: ${mapped.shift}\n`;
+      body += `근태작업군: ${mapped.attendanceGroup}\n`;
+      body += `근무형태: ${mapped.payType}\n`;
+
+      if (type === 'join') {
+        const scheduleLines = buildScheduleLines();
+        body += '\n[근무스케줄]\n';
+        body += scheduleLines.length ? `${scheduleLines.join('\n')}\n` : '입력 없음\n';
+        body += `주 단위 근로시간: ${minutesToText(weeklyMinutes)}\n`;
+      }
+
+      return body;
+    }
+
+    function updatePreview() {
+      mailSubjectPreview.textContent = buildSubject();
+      updateWorkTypeHint();
+    }
+
+    function validateForm() {
+      const type = requestType.value;
+      const requiredIds = ['lastName', 'firstName', 'nationality', 'rrn', 'joinDate', 'employeeType', 'storeName', 'phone', 'email'];
+
+      for (const id of requiredIds) {
+        const el = document.getElementById(id);
+        if (!el.value.trim()) {
+          return `${el.previousElementSibling.textContent.replace('*', '').trim()} 항목을 입력해 주세요.`;
+        }
+      }
+
+      const rrnVal = document.getElementById('rrn').value.trim();
+      if (!/^\d{6}-\d{7}$/.test(rrnVal)) {
+        return '주민등록번호 형식을 확인해 주세요. 예: 000000-0000000';
+      }
+
+      const phoneVal = document.getElementById('phone').value.trim();
+      if (!/^01\d-\d{3,4}-\d{4}$/.test(phoneVal)) {
+        return '휴대전화번호 형식을 확인해 주세요. 예: 010-0000-0000';
+      }
+
+      if (type === 'leave') {
+        if (!leaveDate.value) return '퇴사일을 입력해 주세요.';
+        if (!leaveReason.value.trim()) return '퇴사사유를 입력해 주세요.';
+      }
+
+      if (type === 'join') {
+        const scheduleLines = buildScheduleLines();
+        if (scheduleLines.length === 0) {
+          return '입사 요청은 근무 스케줄을 최소 1행 이상 입력해 주세요.';
+        }
+      }
+
+      return '';
+    }
+
+    function openMailClient() {
+      const subject = buildSubject();
+      const body = buildBody();
+      const mailtoUrl = `mailto:${teamMail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailtoUrl;
+    }
+
+    function setMessage(text, type) {
+      formMessage.className = `message ${type}`;
+      formMessage.textContent = text;
+    }
+
+    buildScheduleRows();
+    toggleSections();
+
+    document.getElementById('rrn').addEventListener('input', (e) => {
+      e.target.value = formatRRN(e.target.value);
+      updatePreview();
+    });
+
+    document.getElementById('phone').addEventListener('input', (e) => {
+      e.target.value = formatPhone(e.target.value);
+      updatePreview();
+    });
+
+    requestType.addEventListener('change', toggleSections);
+    employeeType.addEventListener('change', () => {
+      updateWorkTypeHint();
+      updatePreview();
+    });
+
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+      el.addEventListener('input', () => {
+        calculateWeeklyHours();
+        updatePreview();
+      });
+      el.addEventListener('change', () => {
+        calculateWeeklyHours();
+        updatePreview();
+      });
+    });
+
+    previewBtn.addEventListener('click', () => {
+      formMessage.className = 'message';
+      calculateWeeklyHours();
+      updatePreview();
+      setMessage('메일 제목 미리보기를 갱신했습니다.', 'success');
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      formMessage.className = 'message';
+      calculateWeeklyHours();
+      updatePreview();
+
+      const error = validateForm();
+      if (error) {
+        setMessage(error, 'error');
+        return;
+      }
+
+      setMessage('메일 앱을 여는 중입니다. Outlook 화면이 열리면 바로 보내기 해 주세요.', 'success');
+      openMailClient();
+    });
+  </script>
+</body>
+</html>
